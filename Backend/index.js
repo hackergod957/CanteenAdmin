@@ -1,9 +1,16 @@
 require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
+const studentRouter = require('./routes/student')
+
+
 
 const app = express()
 
+
+app.use(express.json())
+
+app.use("/api/students", studentRouter)
 
 // connect to DB
 mongoose.connect(process.env.MONGO_URI)
