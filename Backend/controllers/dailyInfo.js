@@ -32,7 +32,7 @@ cron.schedule("0 8 * * * ", () => {
         studentsWhoAte: [],
       });
     } catch (error) {
-      console.error("Daily Info couldn't be created",error);
+      console.error("Daily Info couldn't be created", error);
     }
   };
   DailyScheduler();
@@ -42,6 +42,23 @@ cron.schedule("0 8 * * * ", () => {
 const getDailyInfos = async (req, res) => {
   try {
     const dailyInfo = await DailyInfo.find({}).sort({ date: 1 });
+    res.status(200).json(dailyInfo);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+//to get dailyinfo by date
+const getDateInfo = async (req, res) => {
+  const { date } = req.params;
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+  try {
+    const dailyInfo = await DailyInfo.find({
+      date: { $gte: givenDate, $lt: tomorrowDate },
+    });
     res.status(200).json(dailyInfo);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -65,24 +82,36 @@ const getTodaysInfo = async (req, res) => {
   }
 };
 
-const exportTodaysInfo = async (req, res) => {
+const exportTodaysInfo = (req, res) => {
   const todaysDate = new Date();
   todaysDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(todaysDate);
   tomorrowDate.setDate(todaysDate.getDate() + 1);
-  const exportPath = "output.xlsx";
+  excelExport(req, res, todaysDate, tomorrowDate);
+};
+
+const exportDateInfo = async (req, res) => {
+  const { date } = req.params;
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+  excelExport(req, res, givenDate, tomorrowDate);
+};
+const excelExport = async (req, res, date, dateTomorrow) => {
   try {
     const info = await DailyInfo.find({
-      date: { $gte: todaysDate, $lt: tomorrowDate },
+      date: { $gte: date, $lt: dateTomorrow },
     }).populate(["studentsWhoDidNotEat", "studentsWhoAte"]);
     const workBook = new excelJs.Workbook();
-    const workSheet = workBook.addWorksheet("Today's Info ");
+    const workSheet = workBook.addWorksheet("Daily Info ");
 
-    if(!info || info.length == 0){
-       return res.status(404).json({error:"No Daily Info Found For Today"})
+    if (!info || info.length == 0) {
+      return res
+        .status(404)
+        .json({ error: `No Daily Info Found For ${date} ` });
     }
     const todayInfo = info[0];
-
 
     const allStudents = [
       ...todayInfo.studentsWhoAte.map((student) => ({
@@ -124,8 +153,6 @@ const exportTodaysInfo = async (req, res) => {
     await workBook.xlsx.write(res);
 
     res.end();
-
-    console.log("Successfully exported");
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -134,5 +161,7 @@ const exportTodaysInfo = async (req, res) => {
 module.exports = {
   getDailyInfos,
   getTodaysInfo,
-  exportTodaysInfo
+  getDateInfo,
+  exportTodaysInfo,
+  exportDateInfo,
 };
