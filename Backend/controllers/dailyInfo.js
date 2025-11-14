@@ -15,7 +15,7 @@ cron.schedule("0 8 * * * ", () => {
     let dailyInfo = await DailyInfo.findOne({
       date: { $gte: todayDate, $lt: tomorrowDate },
     });
-
+    await Student.updateMany({}, { $set: { status : false } });
     if (dailyInfo) {
       console.log(
         "DailyInfo Already  exists for today . skipping creation ...."
