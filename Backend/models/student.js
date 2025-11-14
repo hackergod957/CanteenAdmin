@@ -29,7 +29,7 @@ const studentSchema = new Schema({
         required : true 
     },
 
-    hasEatenToday : {
+    status : {
         type : Boolean,
         required : true,
         default : false
