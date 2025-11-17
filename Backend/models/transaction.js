@@ -24,22 +24,26 @@ const transactionSchema = new mongoose.Schema(
 
         itemType: {
           type: String,
-          enum: ["Dish", "Snack", "Desert"],
+          enum: ["Dish", "Snack", "Dessert"],
         },
 
         price: {
           type: Number,
           required: true,
         },
-
-        totalAmount: {
-          type: Number,
-          default: 0,
-        },
       },
     ],
+    totalAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    status : {
+      type: String,
+      enum : ["completed","failed","refunded"]
+    }
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Transaction", transactionSchema)
+module.exports = mongoose.model("Transaction", transactionSchema);

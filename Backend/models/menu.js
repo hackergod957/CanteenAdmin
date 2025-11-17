@@ -7,6 +7,11 @@ const MenuSchema = new Schema({
         required : true
     },
 
+    itemId  : {
+        type : String,
+        required: true
+    },
+
     dishes : [{
         Name : {
             type : String,
@@ -53,7 +58,8 @@ const MenuSchema = new Schema({
             type : Number,
             required : true
         }
-    }]
+    }],
+
 })
 
 module.exports = mongoose.model("Menu", MenuSchema)
