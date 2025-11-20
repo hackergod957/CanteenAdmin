@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const studentRouter = require('./routes/student')
 const dailyInfoRouter = require('./routes/dailyInfo')
 const transactionRouter = require('./routes/transaction')
+const menuRouter = require('./routes/menu')
 
 
 
@@ -14,6 +15,7 @@ app.use(express.json())
 
 app.use("/api/students", studentRouter)
 app.use("/api/dailyinfo",dailyInfoRouter)
+app.use("/api/menu",menuRouter)
 app.use("/api/transaction",transactionRouter)
 
 // connect to DB

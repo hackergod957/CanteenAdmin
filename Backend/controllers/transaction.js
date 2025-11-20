@@ -35,9 +35,11 @@ const excelExport = async (req, res, student) => {
         studentId: transaction.student.studentId,
         name: transaction.student.name,
         classLevel: transaction.student.classLevel,
-        items: transaction.items.map((item) => {
-          return `${item.itemName} $${item.price}`;
-        }).join(', '),
+        items: transaction.items
+          .map((item) => {
+            return `${item.itemName} $${item.price}`;
+          })
+          .join(", "),
         date: transaction.createdAt.toISOString().split("T")[0],
         time: transaction.createdAt.toTimeString().split(" ")[0],
         totalAmount: transaction.totalAmount,
@@ -65,24 +67,24 @@ const excelExport = async (req, res, student) => {
   }
 };
 
-const getAllTransactionRecord = async (req,res) => {
-  try{
-    const transactions = await Transaction.find({}).populate("student")
+const getAllTransactionRecord = async (req, res) => {
+  try {
+    const transactions = await Transaction.find({})
+      .populate("student")
       .populate("dailyInfo")
       .sort({ createdAt: -1 });
-    res.status(200).json(transactions)
+    res.status(200).json(transactions);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-  catch(error){
-    res.status(400).json({error : error.message})
-  }
-}
+};
 
 const getStudentTransaction = async (req, res) => {
   const { studentId } = req.params;
   try {
     const student = await Student.findOne({ studentId: studentId });
-    if(!student){
-      res.status(404).json({error : "The student doesn't exist"})
+    if (!student) {
+      res.status(404).json({ error: "The student doesn't exist" });
       return;
     }
     const transaction = await Transaction.find({
@@ -102,14 +104,12 @@ const getExcelByStudent = async (req, res) => {
   const { studentId } = req.params;
 
   const student = await Student.findOne({ studentId: studentId });
-   if(!student){
-      res.status(404).json({error : "The student doesn't exist"})
-      return;
-    }
+  if (!student) {
+    res.status(404).json({ error: "The student doesn't exist" });
+    return;
+  }
   excelExport(req, res, student);
 };
-
-
 
 const purchaseFood = async (req, res) => {
   const { studentId, items } = req.body;
@@ -117,13 +117,13 @@ const purchaseFood = async (req, res) => {
   date.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(date);
   tomorrowDate.setDate(date.getDate() + 1);
-  let totalAmount = 0;
 
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
     const student = await Student.findOne(
       { studentId: studentId },
+      {},
       { session: session }
     );
     if (!student) {
@@ -132,26 +132,32 @@ const purchaseFood = async (req, res) => {
     }
     const menu = await Menu.findOne(
       { date: { $gte: date, $lt: tomorrowDate } },
+      {},
       { session: session }
     );
     const dailyInfo = await DailyInfo.findOne(
       { date: { $gte: date, $lt: tomorrowDate } },
+      {},
       { session: session }
     );
     const allItems = [
       ...menu.dishes.map((item) => item),
       ...menu.snacks.map((item) => item),
-      ...menu.desserts.map((item) => item),
+      ...menu.dessert.map((item) => item),
     ];
-
+    let foundItems = [];
     for (item of items) {
-      let response = allItems.find(menuItem => menuItem.name === item.itemName);
+      let response = allItems.find(
+        (menuItem) => menuItem.name === item.itemName
+      );
       if (!response) {
         res.status(404).json({ error: "The Food Item doesn't exist" });
         return;
       }
-      totalAmount += item.price;
+      foundItems.push(response)
     }
+
+    let totalAmount = foundItems.reduce((sum,item) => sum + item.price,0)
 
     if (student.balance < totalAmount) {
       res.status(400).json({ error: "Balance isn't enough" });
@@ -173,8 +179,8 @@ const purchaseFood = async (req, res) => {
     await DailyInfo.updateOne(
       { _id: dailyInfo.id },
       {
-        $pull: { studentsWhoDidNotEat: studentId },
-        $push: { studentsWhoAte: studentId },
+        $pull: { studentsWhoDidNotEat: student._id },
+        $push: { studentsWhoAte: student._id },
       },
       { session: session }
     );
@@ -182,11 +188,11 @@ const purchaseFood = async (req, res) => {
     const transaction = await Transaction.create(
       [
         {
-          student,
-          dailyInfo,
-          items,
+          student: student._id,
+          dailyInfo: dailyInfo._id,
+          foundItems,
           totalAmount,
-          status: "Completed",
+          status: "completed",
         },
       ],
       { session: session }
@@ -208,5 +214,5 @@ module.exports = {
   purchaseFood,
   getAllTransactionRecord,
   getStudentTransaction,
-  getExcelByStudent
+  getExcelByStudent,
 };

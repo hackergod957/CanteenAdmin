@@ -2,11 +2,11 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
 const DailyInfo = require("../models/dailyInfo");
-const student = require("../models/student");
+const Student = require("../models/student");
 const excelJs = require("exceljs");
 
 // to create file at 8 am every day
-cron.schedule("0 8 * * * ", () => {
+cron.schedule("35 10 * * * ", () => {
   const DailyScheduler = async () => {
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
@@ -24,13 +24,14 @@ cron.schedule("0 8 * * * ", () => {
     }
 
     try {
-      const students = await student.find({}).sort({ id: 1 });
+      const students = await Student.find({}).sort({ id: 1 });
       const idArray = students.map(({ _id }) => _id);
       dailyInfo = await DailyInfo.create({
         studentsWhoDidNotEat: idArray,
         totalEarning: 0,
         studentsWhoAte: [],
       });
+      console.log(dailyInfo)
     } catch (error) {
       console.error("Daily Info couldn't be created", error);
     }
