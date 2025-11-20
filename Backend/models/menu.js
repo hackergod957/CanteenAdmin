@@ -4,7 +4,8 @@ const Schema = mongoose.Schema
 const MenuSchema = new Schema({
     date : {
         type : Date,
-        required : true
+        required : true,
+        unique: true
     },
 
     itemId  : {
@@ -13,48 +14,48 @@ const MenuSchema = new Schema({
     },
 
     dishes : [{
-        Name : {
+        name : {
             type : String,
             required : true
         },
 
-        Image : {
+        image : {
             type : String
         },
 
-        Price : {
+        price : {
             type : Number,
             required : true
         }
     }],
 
     snacks : [{
-        Name : {
+        name : {
             type : String,
             required : true
         },
 
-        Image : {
+        image : {
             type : String
         },
 
-        Price : {
+        price : {
             type : Number,
             required : true
         }
     }],
 
     dessert : [{
-        Name : {
+        name : {
             type : String,
             required : true
         },
 
-        Image : {
+        image : {
             type : String
         },
 
-        Price : {
+        price : {
             type : Number,
             required : true
         }

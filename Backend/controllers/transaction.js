@@ -4,33 +4,44 @@ const Student = require("../models/student");
 const Menu = require("../models/menu");
 const Transaction = require("../models/transaction");
 const DailyInfo = require("../models/dailyInfo");
-const excelJs = require('exceljs')
+const excelJs = require("exceljs");
+const student = require("../models/student");
 
-
-const excelExport = async (req, res,student) => {
+const excelExport = async (req, res, student) => {
   try {
     const transaction = await Transaction.find({
-        student
-    }).populate('student').populate('dailyInfo').sort({createdAt : -1});
+      student,
+    })
+      .populate("student")
+      .populate("dailyInfo")
+      .sort({ createdAt: -1 });
     const workBook = new excelJs.Workbook();
-    const workSheet = workBook.addWorksheet("Daily Info ");
-
-  
-
+    const workSheet = workBook.addWorksheet(" Transaction Record ");
 
     workSheet.columns = [
       { header: "Transaction ID", key: "_id", width: 70 },
-      { header: "Student ID", key: "student.studentId", width: 70 },
-      { header: "Student Name", key: "student.Name", width: 70 },
+      { header: "Student ID", key: "studentId", width: 70 },
+      { header: "Student Name", key: "name", width: 70 },
       { header: "Class", key: "classLevel", width: 70 },
       { header: "Date", key: "date", width: 70 },
-      {header : "Time" , key : "time", width:70},
+      { header: "Time", key: "time", width: 70 },
       { header: "Items", key: "items", width: 30 },
       { header: "Total Amount", key: "totalAmount", width: 70 },
     ];
 
     transaction.forEach((transaction) => {
-      workSheet.addRow(transaction);
+      workSheet.addRow({
+        _id: transaction._id,
+        studentId: transaction.student.studentId,
+        name: transaction.student.name,
+        classLevel: transaction.student.classLevel,
+        items: transaction.items.map((item) => {
+          return `${item.itemName} $${item.price}`;
+        }).join(', '),
+        date: transaction.createdAt.toISOString().split("T")[0],
+        time: transaction.createdAt.toTimeString().split(" ")[0],
+        totalAmount: transaction.totalAmount,
+      });
     });
 
     workSheet.getRow(1).eachCell((cell) => {
@@ -53,20 +64,51 @@ const excelExport = async (req, res,student) => {
     res.status(400).json({ error: error.message });
   }
 };
-const getStudentTransaction = async (req, res) => {
-   const studentId = req.params;
-   try{
-    const student = await Student.findOne({studentId:studentId})
-    const transaction = await Transaction.findOne({
-        student
-    }).populate('student').populate('dailyInfo').sort({createdAt : -1});
 
-    excelExport(req, res,student)
-   } 
-   catch(error){
+const getAllTransactionRecord = async (req,res) => {
+  try{
+    const transactions = await Transaction.find({}).populate("student")
+      .populate("dailyInfo")
+      .sort({ createdAt: -1 });
+    res.status(200).json(transactions)
+  }
+  catch(error){
     res.status(400).json({error : error.message})
-   }
+  }
 }
+
+const getStudentTransaction = async (req, res) => {
+  const { studentId } = req.params;
+  try {
+    const student = await Student.findOne({ studentId: studentId });
+    if(!student){
+      res.status(404).json({error : "The student doesn't exist"})
+      return;
+    }
+    const transaction = await Transaction.find({
+      student,
+    })
+      .populate("student")
+      .populate("dailyInfo")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const getExcelByStudent = async (req, res) => {
+  const { studentId } = req.params;
+
+  const student = await Student.findOne({ studentId: studentId });
+   if(!student){
+      res.status(404).json({error : "The student doesn't exist"})
+      return;
+    }
+  excelExport(req, res, student);
+};
+
 
 
 const purchaseFood = async (req, res) => {
@@ -76,73 +118,95 @@ const purchaseFood = async (req, res) => {
   const tomorrowDate = new Date(date);
   tomorrowDate.setDate(date.getDate() + 1);
   let totalAmount = 0;
-  
 
-  const session = await mongoose.startSession()
-  session.startTransaction()
-  try{
-      const student = await Student.findOne({ studentId: studentId },{session : session});
-      if (!student) {
-        res.status(404).json({ error: "The student doesn't exist" });
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const student = await Student.findOne(
+      { studentId: studentId },
+      { session: session }
+    );
+    if (!student) {
+      res.status(404).json({ error: "The student doesn't exist" });
+      return;
+    }
+    const menu = await Menu.findOne(
+      { date: { $gte: date, $lt: tomorrowDate } },
+      { session: session }
+    );
+    const dailyInfo = await DailyInfo.findOne(
+      { date: { $gte: date, $lt: tomorrowDate } },
+      { session: session }
+    );
+    const allItems = [
+      ...menu.dishes.map((item) => item),
+      ...menu.snacks.map((item) => item),
+      ...menu.desserts.map((item) => item),
+    ];
+
+    for (item of items) {
+      let response = allItems.find(menuItem => menuItem.name === item.itemName);
+      if (!response) {
+        res.status(404).json({ error: "The Food Item doesn't exist" });
         return;
       }
-      const menu = await Menu.findOne({ date: { $gte: date, $lt: tomorrowDate } },{session : session});
-      const dailyInfo = await DailyInfo.findOne({date: { $gte: date, $lt: tomorrowDate}},{session: session})
-      const allItems = [
-          ...menu.dishes.map((item) => item),
-          ...menu.snacks.map((item) => item),
-          ...menu.desserts.map((item) => item),
-        ];
-        
-        
-        for (item of items) {
-            let response = allItems.find(({ Name }) => item.Name === Name);
-            if (!response) {
-                res.status(404).json({ error: "The Food Item doesn't exist" });
-                return;
-            }
-            totalAmount += item.price;
-        }
-        
-        if(student.balance < totalAmount){
-            res.status(400).json({error : "Balance isn't enough"})
-            return
-        }
-        
-        await Student.updateOne({studentId: studentId},{$inc : {balance : -totalAmount}},{session : session})
-        
-        await DailyInfo.updateOne({_id: dailyInfo.id},{$inc:{totalEarning : totalAmount}},{session : session})
+      totalAmount += item.price;
+    }
 
-        await DailyInfo.updateOne({_id:dailyInfo.id},{$pull: {studentsWhoDidNotEat: studentId}, $push: {studentsWhoAte : studentId}}, {session : session})
+    if (student.balance < totalAmount) {
+      res.status(400).json({ error: "Balance isn't enough" });
+      return;
+    }
 
-        const transaction = await Transaction.create([{
-            student,
-            dailyInfo,
-            items,
-            totalAmount,
-            status : "Completed"
-        }], {session : session})
-        
-        await session.commitTransaction()
-        await session.endSession()
+    await Student.updateOne(
+      { studentId: studentId },
+      { $inc: { balance: -totalAmount } },
+      { session: session }
+    );
 
-        res.status(200).json({mssg : "Successful Transaction"})
+    await DailyInfo.updateOne(
+      { _id: dailyInfo.id },
+      { $inc: { totalEarning: totalAmount } },
+      { session: session }
+    );
 
+    await DailyInfo.updateOne(
+      { _id: dailyInfo.id },
+      {
+        $pull: { studentsWhoDidNotEat: studentId },
+        $push: { studentsWhoAte: studentId },
+      },
+      { session: session }
+    );
+
+    const transaction = await Transaction.create(
+      [
+        {
+          student,
+          dailyInfo,
+          items,
+          totalAmount,
+          status: "Completed",
+        },
+      ],
+      { session: session }
+    );
+
+    await session.commitTransaction();
+    await session.endSession();
+
+    res.status(200).json({ mssg: "Successful Transaction" });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+    await session.abortTransaction();
+  } finally {
+    await session.endSession();
   }
-  catch(error){
-    res.status(400).json({error : error.message})
-    await session.abortTransaction()
-  }
-  finally{
-    await session.endSession()
-  }
-
-    
-
-
-
 };
 
 module.exports = {
   purchaseFood,
+  getAllTransactionRecord,
+  getStudentTransaction,
+  getExcelByStudent
 };

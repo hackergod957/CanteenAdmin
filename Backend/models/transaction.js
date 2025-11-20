@@ -41,7 +41,13 @@ const transactionSchema = new mongoose.Schema(
     status : {
       type: String,
       enum : ["completed","failed","refunded"]
+    },
+
+    date: {
+      type : Date,
+      default: Date.now
     }
+
   },
   { timestamps: true }
 );
