@@ -8,6 +8,6 @@ dailyInfoRouter.get("/", getDailyInfos);
 dailyInfoRouter.get("/today",getTodaysInfo)
 dailyInfoRouter.get("/:date",getDateInfo)
 dailyInfoRouter.get("/export/:date",exportDateInfo)
-dailyInfoRouter.get("/export/today",exportTodaysInfo)
+dailyInfoRouter.get("/today/export",exportTodaysInfo)
 
 module.exports = dailyInfoRouter;

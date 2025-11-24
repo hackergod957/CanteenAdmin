@@ -7,9 +7,9 @@ const studentRouter = express.Router()
 
 
 studentRouter.get("/",getStudents)
-studentRouter.get("/:id",getStudent)
+studentRouter.get("/:studentId",getStudent)
 studentRouter.post("/",createStudent)
-studentRouter.delete("/:id", deleteStudent)
-studentRouter.patch("/:id", updateStudent)
+studentRouter.delete("/:studentId", deleteStudent)
+studentRouter.patch("/:studentId", updateStudent)
 
 module.exports = studentRouter

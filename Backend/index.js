@@ -1,10 +1,11 @@
 require('dotenv').config()
 const express = require('express')
+const bcrypt = require("bcryptjs")
 const mongoose = require('mongoose')
-const studentRouter = require('./routes/student')
-const dailyInfoRouter = require('./routes/dailyInfo')
-const transactionRouter = require('./routes/transaction')
-const menuRouter = require('./routes/menu')
+const studentRouter = require('./src/routes/student')
+const dailyInfoRouter = require('./src/routes/dailyInfo')
+const transactionRouter = require('./src/routes/transaction')
+const menuRouter = require('./src/routes/menu')
 
 
 
@@ -29,3 +30,5 @@ mongoose.connect(process.env.MONGO_URI)
   .catch((error) => {
     console.log(error)
   })
+
+  

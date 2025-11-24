@@ -34,6 +34,27 @@ const getMenu = async (req, res) => {
   }
 };
 
+const getTodayMenu = async (req, res) => {
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+
+  try {
+    const menu = await Menu.findOne({
+      date: { $gte: todayDate, $lt: tomorrowDate },
+    });
+
+    if (!menu) {
+      res.status(404).json({ error: "No such Menu exits" });
+    }
+
+    res.status(200).json(menu);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 //create a new Menu
 const createMenu = async (req, res) => {
   try {
@@ -100,6 +121,7 @@ const updateMenu = async (req, res) => {
 
 module.exports = {
   getAllMenu,
+  getTodayMenu,
   getMenu,
   createMenu,
   updateMenu,

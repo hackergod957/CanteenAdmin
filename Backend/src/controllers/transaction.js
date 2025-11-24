@@ -5,16 +5,9 @@ const Menu = require("../models/menu");
 const Transaction = require("../models/transaction");
 const DailyInfo = require("../models/dailyInfo");
 const excelJs = require("exceljs");
-const student = require("../models/student");
 
-const excelExport = async (req, res, student) => {
+const excelExport = async (req, res, transaction) => {
   try {
-    const transaction = await Transaction.find({
-      student,
-    })
-      .populate("student")
-      .populate("dailyInfo")
-      .sort({ createdAt: -1 });
     const workBook = new excelJs.Workbook();
     const workSheet = workBook.addWorksheet(" Transaction Record ");
 
@@ -100,6 +93,45 @@ const getStudentTransaction = async (req, res) => {
   }
 };
 
+const getTodayTransaction = async (req, res) => {
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+  try {
+    const transaction = await Transaction.find({
+      date: { $gte: todayDate, $lt: tomorrowDate },
+    })
+      .populate("student")
+      .populate("dailyInfo")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const getDateInfo = async (req, res) => {
+  const { date } = req.params;
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+  try {
+    const transaction = await Transaction.find({
+      date: { $gte: givenDate, $lt: tomorrowDate },
+    })
+      .populate("student")
+      .populate("dailyInfo")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(transaction);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 const getExcelByStudent = async (req, res) => {
   const { studentId } = req.params;
 
@@ -108,7 +140,42 @@ const getExcelByStudent = async (req, res) => {
     res.status(404).json({ error: "The student doesn't exist" });
     return;
   }
-  excelExport(req, res, student);
+  const transaction = await Transaction.find({
+    student,
+  })
+    .populate("student")
+    .populate("dailyInfo")
+    .sort({ createdAt: -1 });
+  excelExport(req, res, transaction);
+};
+
+const getExcelByDate = async (req, res) => {
+  const { date } = req.params;
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+  const transaction = await Transaction.find({
+    date: { $gte: todayDate, $lt: tomorrowDate },
+  })
+    .populate("student")
+    .populate("dailyInfo")
+    .sort({ createdAt: -1 });
+  excelExport(req, res, transaction);
+};
+
+const getTodayExcel = async (req, res) => {
+  const todayDate = new Date();
+  todayDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate() + 1);
+  const transaction = await Transaction.find({
+    date: { $gte: todayDate, $lt: tomorrowDate },
+  })
+    .populate("student")
+    .populate("dailyInfo")
+    .sort({ createdAt: -1 });
+  excelExport(req, res, transaction);
 };
 
 const purchaseFood = async (req, res) => {
@@ -140,6 +207,20 @@ const purchaseFood = async (req, res) => {
       {},
       { session: session }
     );
+    if (!dailyInfo) {
+      try {
+        const students = await Student.find({}).sort({ id: 1 });
+        const idArray = students.map(({ _id }) => _id);
+        dailyInfo = await DailyInfo.create({
+          studentsWhoDidNotEat: idArray,
+          totalEarning: 0,
+          studentsWhoAte: [],
+        });
+        console.log(dailyInfo);
+      } catch (error) {
+        console.error("Daily Info couldn't be created", error);
+      }
+    }
     const allItems = [
       ...menu.dishes.map((item) => item),
       ...menu.snacks.map((item) => item),
@@ -154,10 +235,10 @@ const purchaseFood = async (req, res) => {
         res.status(404).json({ error: "The Food Item doesn't exist" });
         return;
       }
-      foundItems.push(response)
+      foundItems.push(response);
     }
 
-    let totalAmount = foundItems.reduce((sum,item) => sum + item.price,0)
+    let totalAmount = foundItems.reduce((sum, item) => sum + item.price, 0);
 
     if (student.balance < totalAmount) {
       res.status(400).json({ error: "Balance isn't enough" });
@@ -213,6 +294,10 @@ const purchaseFood = async (req, res) => {
 module.exports = {
   purchaseFood,
   getAllTransactionRecord,
+  getDateInfo,
+  getTodayTransaction,
   getStudentTransaction,
+  getTodayExcel,
   getExcelByStudent,
+  getExcelByDate
 };

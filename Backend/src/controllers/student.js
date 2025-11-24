@@ -13,14 +13,11 @@ const getStudents = async (req, res) => {
 
 //get a student
 const getStudent = async (req, res) => {
-  const { id } = req.params;
+  const { studentId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id) ) {
-    res.status(404).json({ error: "No such student exists" });
-  }
 
   try {
-    const student = await Student.findById(id);
+    const student = await Student.findOne({studentId : studentId});
     
     if(!student){
         res.status(404).json({error : "No such students exits"})
@@ -63,10 +60,10 @@ const createStudent = async (req, res) => {
 
 // delete a student
 const deleteStudent = async (req, res) => {
-  const { id } = req.params;
+  const { studentId } = req.params;
 
   try {
-    const student = await Student.findOneAndDelete({ _id: id }, { new: true });
+    const student = await Student.findOneAndDelete({ studentId: studentId }, { new: true });
     
     if(!student){
         res.status(404).json({error : "No such students exits"})
@@ -81,15 +78,12 @@ const deleteStudent = async (req, res) => {
 
 //update a student info
 const updateStudent = async (req, res) => {
-  const { id } = req.params;
+  const { studentId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(404).json({ error: "No such student exits" });
-  }
 
   try {
     const student = await Student.findOneAndUpdate(
-      { _id: id },
+      { studentId: studentId },
       {
         ...req.body,
       },
