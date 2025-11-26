@@ -31,6 +31,9 @@ const getStudent = async (req, res) => {
 
 //create a new student
 const createStudent = async (req, res) => {
+    if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   const {
     studentId,
     name,
@@ -60,6 +63,9 @@ const createStudent = async (req, res) => {
 
 // delete a student
 const deleteStudent = async (req, res) => {
+   if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   const { studentId } = req.params;
 
   try {
@@ -78,6 +84,9 @@ const deleteStudent = async (req, res) => {
 
 //update a student info
 const updateStudent = async (req, res) => {
+   if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   const { studentId } = req.params;
 
 

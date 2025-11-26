@@ -6,6 +6,8 @@ const studentRouter = require('./src/routes/student')
 const dailyInfoRouter = require('./src/routes/dailyInfo')
 const transactionRouter = require('./src/routes/transaction')
 const menuRouter = require('./src/routes/menu')
+const jwt = require('jsonwebtoken')
+const loginRouter = require('./src/routes/login')
 
 
 
@@ -14,6 +16,7 @@ const app = express()
 
 app.use(express.json())
 
+app.use("/api/auth",loginRouter)
 app.use("/api/students", studentRouter)
 app.use("/api/dailyinfo",dailyInfoRouter)
 app.use("/api/menu",menuRouter)

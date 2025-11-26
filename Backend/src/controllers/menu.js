@@ -57,6 +57,9 @@ const getTodayMenu = async (req, res) => {
 
 //create a new Menu
 const createMenu = async (req, res) => {
+    if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   try {
     const menu = await Menu.create({
       ...req.body,
@@ -70,6 +73,9 @@ const createMenu = async (req, res) => {
 
 // delete a menu
 const deleteMenu = async (req, res) => {
+    if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   const { date } = req.params;
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
@@ -94,6 +100,9 @@ const deleteMenu = async (req, res) => {
 
 //update a menu info
 const updateMenu = async (req, res) => {
+  if(!req.user || req.user.role !== "admin"){
+    return res.status(403).json({error : "Admin Access Required"})
+  }
   const { date } = req.params;
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
