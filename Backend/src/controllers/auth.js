@@ -2,23 +2,19 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-
-
-const authenticateToken = (req,res,next) => {
-try{
-
-    const token = req.header('Authorization')?.replace('Bearer ','')
-    if(!token){
-        return next()
+const authenticateToken = (req, res, next) => {
+  try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+      return next();
     }
-    const userData = jwt.verify(token,process.env.JWT_SECRET)
-    req.user = userData
-    return next()
-}
-catch(error){
-    res.status(401).json({error : "Invalid or expired token"})
-}
-}
+    const userData = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = userData;
+    return next();
+  } catch (error) {
+    res.status(401).json({ error: "Invalid or expired token" });
+  }
+};
 
 const signInAsGuest = (req, res) => {
   try {
@@ -61,31 +57,15 @@ const signInAsAdmin = async (req, res) => {
       process.env.ADMIN_PASSWORD_HASH
     );
 
-    if( !isValidUsername || !isValidPass){
-        res.status(400).json({error: "Incorrect Username Or Password"})
-        return
+    if (!isValidUsername || !isValidPass) {
+      res.status(400).json({ error: "Incorrect Username Or Password" });
+      return;
     }
 
-      const badge = jwt.sign(
-        {
-          role: "admin",
-          permission: [
-            "view-menu",
-            "view-students",
-            "view-dailyInfo",
-            "modify-students",
-            "modify-menu",
-            "admin-access",
-          ],
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-      res.status(200).json({
-        token: badge,
+    const badge = jwt.sign(
+      {
         role: "admin",
-        expiresIn: "7 days",
-        permissions: [
+        permission: [
           "view-menu",
           "view-students",
           "view-dailyInfo",
@@ -93,15 +73,30 @@ const signInAsAdmin = async (req, res) => {
           "modify-menu",
           "admin-access",
         ],
-      });
-    
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    res.status(200).json({
+      token: badge,
+      role: "admin",
+      expiresIn: "7 days",
+      permissions: [
+        "view-menu",
+        "view-students",
+        "view-dailyInfo",
+        "modify-students",
+        "modify-menu",
+        "admin-access",
+      ],
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
 module.exports = {
-    authenticateToken,
-    signInAsAdmin,
-    signInAsGuest
-}
+  authenticateToken,
+  signInAsAdmin,
+  signInAsGuest,
+};
