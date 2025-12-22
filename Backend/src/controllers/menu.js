@@ -128,11 +128,90 @@ const updateMenu = async (req, res) => {
   }
 };
 
+const updateMenuItem = async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin Access Required" });
+  }
+
+  const { date, type, itemId } = req.params;
+
+  if (!["dishes", "snacks", "dessert"].includes(type)) {
+    return res.status(400).json({ error: "Invalid menu type" });
+  }
+
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+
+  const updateFields = {};
+  for (const key in req.body) {
+    updateFields[`${type}.$.${key}`] = req.body[key];
+  }
+
+  try {
+    const menu = await Menu.findOneAndUpdate(
+      {
+        date: { $gte: givenDate, $lt: tomorrowDate },
+        [`${type}._id`]: itemId,
+      },
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!menu) {
+      return res.status(404).json({ error: "Menu or item not found" });
+    }
+
+    res.status(200).json(menu);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+const deleteMenuItem = async (req, res) => {
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin Access Required" });
+  }
+
+  const { date, type, itemId } = req.params;
+
+  if (!["dishes", "snacks", "dessert"].includes(type)) {
+    return res.status(400).json({ error: "Invalid menu type" });
+  }
+
+  const givenDate = new Date(date);
+  givenDate.setHours(0, 0, 0, 0);
+  const tomorrowDate = new Date(givenDate);
+  tomorrowDate.setDate(givenDate.getDate() + 1);
+
+  try {
+    const menu = await Menu.findOneAndUpdate(
+      { date: { $gte: givenDate, $lt: tomorrowDate } },
+      { $pull: { [type]: { _id: itemId } } },
+      { new: true }
+    );
+
+    if (!menu) {
+      return res.status(404).json({ error: "Menu or item not found" });
+    }
+
+    res.status(200).json(menu);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+module.exports = { deleteMenuItem };
+
+
+
 module.exports = {
   getAllMenu,
   getTodayMenu,
   getMenu,
   createMenu,
   updateMenu,
+  updateMenuItem,
   deleteMenu,
+  deleteMenuItem
 };

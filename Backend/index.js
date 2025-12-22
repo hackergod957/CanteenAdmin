@@ -16,6 +16,7 @@ const app = express()
 
 app.use(express.json())
 
+app.use('/uploads', express.static('uploads'));
 app.use("/api/auth",loginRouter)
 app.use("/api/students", studentRouter)
 app.use("/api/dailyinfo",dailyInfoRouter)
