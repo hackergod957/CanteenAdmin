@@ -13,11 +13,11 @@ const getStudents = async (req, res) => {
 
 //get a student
 const getStudent = async (req, res) => {
-  const { studentId } = req.params;
+  const { id } = req.params;
 
 
   try {
-    const student = await Student.findOne({studentId : studentId});
+    const student = await Student.findOne({_id : id});
     
     if(!student){
         res.status(404).json({error : "No such students exits"})
@@ -66,10 +66,10 @@ const deleteStudent = async (req, res) => {
    if(!req.user || req.user.role !== "admin"){
     return res.status(403).json({error : "Admin Access Required"})
   }
-  const { studentId } = req.params;
+  const { id } = req.params;
 
   try {
-    const student = await Student.findOneAndDelete({ studentId: studentId }, { new: true });
+    const student = await Student.findOneAndDelete({ _id : id }, { new: true });
     
     if(!student){
         res.status(404).json({error : "No such students exits"})
@@ -87,12 +87,12 @@ const updateStudent = async (req, res) => {
    if(!req.user || req.user.role !== "admin"){
     return res.status(403).json({error : "Admin Access Required"})
   }
-  const { studentId } = req.params;
+  const { id} = req.params;
 
 
   try {
     const student = await Student.findOneAndUpdate(
-      { studentId: studentId },
+      { _id : id },
       {
         ...req.body,
       },

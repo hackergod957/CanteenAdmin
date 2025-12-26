@@ -6,7 +6,7 @@ const Student = require("../models/student");
 const excelJs = require("exceljs");
 
 // to create file at 8 am every day
-cron.schedule("14 10 * * * ", () => {
+cron.schedule("0 8 * * * ", () => {
   const DailyScheduler = async () => {
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);

@@ -11,9 +11,9 @@
   const studentRouter = express.Router();
 
   studentRouter.get("/", getStudents);
-  studentRouter.get("/:studentId", getStudent);
+  studentRouter.get("/:id", getStudent);
   studentRouter.post("/", authenticateToken, createStudent);
-  studentRouter.delete("/:studentId", authenticateToken, deleteStudent);
-  studentRouter.patch("/:studentId", authenticateToken, updateStudent);
+  studentRouter.delete("/:id", authenticateToken, deleteStudent);
+  studentRouter.patch("/:id", authenticateToken, updateStudent);
 
   module.exports = studentRouter;

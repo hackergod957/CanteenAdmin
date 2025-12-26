@@ -98,7 +98,6 @@ const deleteMenu = async (req, res) => {
   }
 };
 
-//update a menu info
 const updateMenu = async (req, res) => {
   if(!req.user || req.user.role !== "admin"){
     return res.status(403).json({error : "Admin Access Required"})
