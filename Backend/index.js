@@ -8,6 +8,7 @@ const transactionRouter = require('./src/routes/transaction')
 const menuRouter = require('./src/routes/menu')
 const jwt = require('jsonwebtoken')
 const loginRouter = require('./src/routes/login')
+const staffRouter = require('./src/routes/staff')
 
 
 
