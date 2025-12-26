@@ -19,6 +19,7 @@ app.use(express.json())
 app.use('/uploads', express.static('uploads'));
 app.use("/api/auth",loginRouter)
 app.use("/api/students", studentRouter)
+app.use("/api/staff",staffRouter)
 app.use("/api/dailyinfo",dailyInfoRouter)
 app.use("/api/menu",menuRouter)
 app.use("/api/transaction",transactionRouter)
