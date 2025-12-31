@@ -4,6 +4,9 @@ const cron = require("node-cron");
 const DailyInfo = require("../models/dailyInfo");
 const Student = require("../models/student");
 const excelJs = require("exceljs");
+const NepaliDate = require("nepali-date-converter");
+const bsToAd = require("../utils/bsToAd");
+const adToBs = require("../utils/adToBs");
 
 // to create file at 8 am every day
 cron.schedule("0 8 * * * ", () => {
@@ -15,7 +18,7 @@ cron.schedule("0 8 * * * ", () => {
     let dailyInfo = await DailyInfo.findOne({
       date: { $gte: todayDate, $lt: tomorrowDate },
     });
-    await Student.updateMany({}, { $set: { status : false } });
+    await Student.updateMany({}, { $set: { status: false } });
     if (dailyInfo) {
       console.log(
         "DailyInfo Already  exists for today . skipping creation ...."
@@ -31,7 +34,7 @@ cron.schedule("0 8 * * * ", () => {
         totalEarning: 0,
         studentsWhoAte: [],
       });
-      console.log(dailyInfo)
+      console.log(dailyInfo);
     } catch (error) {
       console.error("Daily Info couldn't be created", error);
     }
@@ -51,7 +54,8 @@ const getDailyInfos = async (req, res) => {
 
 //to get dailyinfo by date
 const getDateInfo = async (req, res) => {
-  const { date } = req.params;
+  const { BsDate } = req.params;
+  date = bsToAd(BsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);
@@ -106,11 +110,11 @@ const excelExport = async (req, res, date, dateTomorrow) => {
     }).populate(["studentsWhoDidNotEat", "studentsWhoAte"]);
     const workBook = new excelJs.Workbook();
     const workSheet = workBook.addWorksheet("Daily Info ");
-
+    const bsDate = adToBs(date)
     if (!info || info.length == 0) {
       return res
         .status(404)
-        .json({ error: `No Daily Info Found For ${date} ` });
+        .json({ error: `No Daily Info Found For ${bsDate} ` });
     }
     const todayInfo = info[0];
 

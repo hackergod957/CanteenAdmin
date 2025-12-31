@@ -5,6 +5,7 @@ const Menu = require("../models/menu");
 const Transaction = require("../models/transaction");
 const DailyInfo = require("../models/dailyInfo");
 const excelJs = require("exceljs");
+const adToBs = require("../utils/adToBs");
 
 const excelExport = async (req, res, transaction) => {
   try {
@@ -33,7 +34,7 @@ const excelExport = async (req, res, transaction) => {
             return `${item.itemName} $${item.price}`;
           })
           .join(", "),
-        date: transaction.createdAt.toISOString().split("T")[0],
+        date: adToBs(transaction.createdAt.toISOString().split("T")[0]),
         time: transaction.createdAt.toTimeString().split(" ")[0],
         totalAmount: transaction.totalAmount,
       });
@@ -113,7 +114,8 @@ const getTodayTransaction = async (req, res) => {
 };
 
 const getDateInfo = async (req, res) => {
-  const { date } = req.params;
+  const { bsDate } = req.params;
+  const date = bsToAd(bsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);
@@ -150,7 +152,8 @@ const getExcelByStudent = async (req, res) => {
 };
 
 const getExcelByDate = async (req, res) => {
-  const { date } = req.params;
+  const { bsDate } = req.params;
+  const date = bsToAd(bsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);

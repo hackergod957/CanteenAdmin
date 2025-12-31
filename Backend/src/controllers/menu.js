@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Menu = require("../models/menu");
+const bsToAd = require("../utils/bsToAd");
 
 //get all menus
 const getAllMenu = async (req, res) => {
@@ -13,7 +14,8 @@ const getAllMenu = async (req, res) => {
 
 //get a menu
 const getMenu = async (req, res) => {
-  const { date } = req.params;
+  const { bsDate } = req.params;
+  const date = bsToAd(bsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);
@@ -57,8 +59,8 @@ const getTodayMenu = async (req, res) => {
 
 //create a new Menu
 const createMenu = async (req, res) => {
-    if(!req.user || req.user.role !== "admin"){
-    return res.status(403).json({error : "Admin Access Required"})
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin Access Required" });
   }
   try {
     const menu = await Menu.create({
@@ -73,10 +75,11 @@ const createMenu = async (req, res) => {
 
 // delete a menu
 const deleteMenu = async (req, res) => {
-    if(!req.user || req.user.role !== "admin"){
-    return res.status(403).json({error : "Admin Access Required"})
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin Access Required" });
   }
-  const { date } = req.params;
+  const { bsDate } = req.params;
+  const date = bsToAd(bsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);
@@ -99,10 +102,11 @@ const deleteMenu = async (req, res) => {
 };
 
 const updateMenu = async (req, res) => {
-  if(!req.user || req.user.role !== "admin"){
-    return res.status(403).json({error : "Admin Access Required"})
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({ error: "Admin Access Required" });
   }
-  const { date } = req.params;
+  const { bsDate } = req.params;
+  const date = bsToAd(bsDate);
   const givenDate = new Date(date);
   givenDate.setHours(0, 0, 0, 0);
   const tomorrowDate = new Date(givenDate);
@@ -132,8 +136,8 @@ const updateMenuItem = async (req, res) => {
     return res.status(403).json({ error: "Admin Access Required" });
   }
 
-  const { date, type, itemId } = req.params;
-
+  const { bsDate, type, itemId } = req.params;
+  const date = bsToAd(bsDate);
   if (!["dishes", "snacks", "dessert"].includes(type)) {
     return res.status(400).json({ error: "Invalid menu type" });
   }
@@ -172,7 +176,8 @@ const deleteMenuItem = async (req, res) => {
     return res.status(403).json({ error: "Admin Access Required" });
   }
 
-  const { date, type, itemId } = req.params;
+  const { bsdate, type, itemId } = req.params;
+  const date = bsToAd(bsDate);
 
   if (!["dishes", "snacks", "dessert"].includes(type)) {
     return res.status(400).json({ error: "Invalid menu type" });
@@ -202,8 +207,6 @@ const deleteMenuItem = async (req, res) => {
 
 module.exports = { deleteMenuItem };
 
-
-
 module.exports = {
   getAllMenu,
   getTodayMenu,
@@ -212,5 +215,5 @@ module.exports = {
   updateMenu,
   updateMenuItem,
   deleteMenu,
-  deleteMenuItem
+  deleteMenuItem,
 };

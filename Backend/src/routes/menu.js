@@ -14,18 +14,18 @@ const menuRouter = express.Router();
 
 menuRouter.get("/", getAllMenu);
 menuRouter.get("/today", getTodayMenu);
-menuRouter.get("/:date", getMenu);
+menuRouter.get("/:bsDate", getMenu);
 
 menuRouter.post("/",authenticateToken,createMenu);
-menuRouter.delete("/:date",authenticateToken ,deleteMenu);
-menuRouter.patch("/:date", authenticateToken,updateMenu);
+menuRouter.delete("/:bsDate",authenticateToken ,deleteMenu);
+menuRouter.patch("/:bsDate", authenticateToken,updateMenu);
 menuRouter.patch(
-  "/:date/:type/:itemId",
+  "/:bsDate/:type/:itemId",
   authenticateToken,
   updateMenuItem
 );
 menuRouter.delete(
-  "/:date/:type/:itemId",
+  "/:bsDate/:type/:itemId",
   authenticateToken,
   deleteMenuItem
 );
